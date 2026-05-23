@@ -17,14 +17,18 @@ Env: ANTHROPIC_API_KEY
 Run: python scripts/synthesize_principles.py
 """
 
+import io
 import json
 import os
 import re
+import sys
 import yaml
 from pathlib import Path
 
 import anthropic
 from dotenv import load_dotenv
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 load_dotenv(".env.local")
 
@@ -110,7 +114,7 @@ def validate_principle(
         # Fallback: LLM verification for near-matches
         try:
             msg = ai.messages.create(
-                model="claude-haiku-4-5",
+                model="claude-haiku-4-5-20251001",
                 max_tokens=64,
                 messages=[{
                     "role": "user",
@@ -150,7 +154,7 @@ def main():
 
     print("Calling Sonnet for synthesis ...")
     msg = ai.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         max_tokens=8192,
         messages=[{
             "role": "user",
@@ -162,7 +166,19 @@ def main():
     )
 
     raw = msg.content[0].text.strip()
-    candidates = json.loads(raw)
+    if raw.startswith("```"):
+        raw = re.sub(r"^```[a-z]*\n?", "", raw)
+        raw = re.sub(r"\n?```$", "", raw.strip())
+        raw = raw.strip()
+    if not raw:
+        print(f"ERROR: empty response from model. Stop.")
+        return
+    try:
+        candidates = json.loads(raw)
+    except json.JSONDecodeError as e:
+        print(f"ERROR: JSON parse failed: {e}")
+        print(f"First 300 chars of response: {raw[:300]!r}")
+        return
     print(f"Got {len(candidates)} candidate principles")
 
     source_index = build_source_index(official, practitioner)

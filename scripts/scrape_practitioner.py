@@ -14,17 +14,21 @@ Env: ANTHROPIC_API_KEY must be set (use .env.local or export)
 """
 
 import asyncio
+import io
 import json
 import os
 import re
+import sys
 import yaml
 from datetime import date
 from pathlib import Path
 
 import anthropic
 import httpx
-from selectolax.parser import HTMLParser
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 load_dotenv(".env.local")
 
@@ -32,8 +36,30 @@ CORPUS_PATH = Path(__file__).parent.parent / "corpus" / "practitioner.yaml"
 
 # Pre-defined target list — add/remove URLs here
 TARGET_URLS = [
-    "https://www.murthy.com/2023/01/01/b1-b2-visitor-visa/",
-    # TODO: add remaining ~14 URLs from plan
+    # Immigration law firm guides
+    "https://www.murthy.com/visitor/b-2-visa/",
+    "https://manifestlaw.com/blog/b1-b2-tourist-visa-interview-questions/",
+
+    # Nolo legal encyclopedia (verified URLs)
+    "https://www.nolo.com/legal-encyclopedia/how-to-increase-your-chances-of-getting-a-u-s-visitor-visa.html",
+    "https://www.nolo.com/legal-encyclopedia/application-process-b-1-b-2-visitor-visa.html",
+    "https://www.nolo.com/legal-encyclopedia/a-b-2-visa-visiting-the-us-tourist-do-you-qualify.html",
+    "https://www.nolo.com/legal-encyclopedia/why-was-my-u-s-visitor-visa-renewal-denied.html",
+    "https://www.nolo.com/legal-encyclopedia/my-us-tourist-visa-refused-what-can-i.html",
+    "https://www.nolo.com/legal-encyclopedia/a-b-1-visa-business-visits-the-us-do-you-qualify.html",
+
+    # Boundless immigration resources (verified URLs)
+    "https://www.boundless.com/immigration-resources/b-1-b-2-visa-sample-interview-questions",
+    "https://www.boundless.com/immigration-resources/preparing-for-travel-visa-interview",
+
+    # ImmiHelp experiences (verified URLs)
+    "https://www.immihelp.com/visitor-visa-b2-experiences/",
+    "https://www.immihelp.com/experience/119685-coolpact-B2-Visa-Interview-Questions.html",
+
+    # RedBus2US stamping experience threads (verified URLs)
+    "https://redbus2us.com/visas/usa/stamping-experiences/b1-b2-visitor-visa-experiences-january-1st-2024-onwards/",
+    "https://redbus2us.com/visas/usa/stamping-experiences/b1-b2-visitor-visa-experiences-march-15th-2023-onwards/",
+    "https://redbus2us.com/us-visitor-visa-b2-parents-process-documents/",
 ]
 
 EXTRACT_PROMPT = """You are extracting structured visa-related claims from an immigration attorney article.
@@ -71,23 +97,33 @@ def quote_present(text: str, quote: str) -> bool:
 async def fetch_article(client: httpx.AsyncClient, url: str) -> tuple[str, str]:
     resp = await client.get(url, follow_redirects=True, timeout=30)
     resp.raise_for_status()
-    tree = HTMLParser(resp.text)
-    for tag in tree.css("script, style, nav, footer, header"):
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("script, style, nav, footer, header"):
         tag.decompose()
-    return tree.body.text(strip=True) if tree.body else "", resp.text
+    body = soup.body
+    return body.get_text(strip=True) if body else "", resp.text
 
 
 async def extract_claims(ai: anthropic.Anthropic, url: str, text: str) -> list[dict]:
+    if len(text) < 200:
+        print(f"  Skipping {url}: fetched text too short ({len(text)} chars) — likely JS-rendered")
+        return []
+
     msg = ai.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=2048,
+        model="claude-haiku-4-5-20251001",
+        max_tokens=4096,
         messages=[{"role": "user", "content": EXTRACT_PROMPT.format(url=url, text=text[:8000])}],
     )
     raw = msg.content[0].text.strip()
+    # strip markdown code fences if present
+    if raw.startswith("```"):
+        raw = re.sub(r"^```[a-z]*\n?", "", raw)
+        raw = re.sub(r"\n?```$", "", raw)
+        raw = raw.strip()
     try:
         candidates = json.loads(raw)
     except json.JSONDecodeError:
-        print(f"  JSON parse error for {url}")
+        print(f"  JSON parse error for {url} — LLM returned: {raw[:120]!r}")
         return []
     return candidates
 
@@ -116,7 +152,7 @@ async def process_url(client: httpx.AsyncClient, ai: anthropic.Anthropic, url: s
             "validation_status": "passed" if valid else "failed",
         })
     passed = sum(1 for r in results if r["validation_status"] == "passed")
-    print(f"    → {len(candidates)} candidates, {passed} passed validation")
+    print(f"    -> {len(candidates)} candidates, {passed} passed validation")
     return results
 
 

@@ -13,12 +13,15 @@ Schema: visa-coach-plan.md §2.1
 """
 
 import asyncio
+import warnings
 import yaml
 from datetime import date
 from pathlib import Path
 
 import httpx
-from selectolax.parser import HTMLParser
+from bs4 import BeautifulSoup
+
+warnings.filterwarnings("ignore", message="Unverified HTTPS")
 
 
 CORPUS_PATH = Path(__file__).parent.parent / "corpus" / "official.yaml"
@@ -42,15 +45,15 @@ TARGETS = [
 async def fetch(client: httpx.AsyncClient, url: str) -> str:
     resp = await client.get(url, follow_redirects=True, timeout=30)
     resp.raise_for_status()
-    return resp.text
+    return resp.content.decode("utf-8", errors="replace")
 
 
 def parse_fam(html: str, source_meta: dict) -> list[dict]:
-    tree = HTMLParser(html)
+    soup = BeautifulSoup(html, "html.parser")
     entries = []
     idx = 1
-    for node in tree.css("p, li"):
-        text = node.text(strip=True)
+    for node in soup.select("p, li"):
+        text = node.get_text(strip=True)
         if len(text) < 80:
             continue
         entries.append({
@@ -68,14 +71,14 @@ def parse_fam(html: str, source_meta: dict) -> list[dict]:
 
 async def main():
     results = []
-    async with httpx.AsyncClient(headers={"User-Agent": "VisaCoach/1.0 (personal research)"}) as client:
+    async with httpx.AsyncClient(headers={"User-Agent": "VisaCoach/1.0 (personal research)"}, verify=False) as client:
         for target in TARGETS:
             print(f"Fetching {target['source_url']} ...")
             try:
                 html = await fetch(client, target["source_url"])
                 entries = parse_fam(html, target)
                 results.extend(entries)
-                print(f"  → {len(entries)} paragraphs extracted")
+                print(f"  -> {len(entries)} paragraphs extracted")
             except Exception as e:
                 print(f"  ERROR: {e}")
 
