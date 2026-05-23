@@ -14,15 +14,16 @@ The full planning document is `visa-coach-plan.md` in this repo. Read it first i
 
 ## Stack (non-negotiable — do not substitute)
 
-- **Framework:** Next.js 14+ with App Router, TypeScript
-- **Styling:** Tailwind CSS + shadcn/ui components
+- **Framework:** Next.js 16.x with App Router, TypeScript (currently 16.2.6, React 19)
+- **Styling:** Tailwind CSS v4 (no shadcn components installed — only the CLI)
 - **Animations:** Framer Motion (sparingly — subtle only; this is not a marketing site)
-- **Database:** Supabase (Postgres + pgvector). Use the Supabase JS client.
+- **Database:** Supabase (Postgres + pgvector). Use `@supabase/ssr` v0.10.3.
 - **Auth:** Supabase Auth with magic-link, single user. No signup flow — Pranjal creates Garvita's account in the dashboard.
-- **AI:** Anthropic API (`@anthropic-ai/sdk`).
-  - `claude-haiku-4-5` for: simulator turn generation (latency matters mid-interview), corpus extraction during scraping
-  - `claude-sonnet-4-5` for: critique generation, Q&A synthesis, principles synthesis
-- **Scraper:** Python 3.11+ in `/scripts` directory. Uses `httpx`, `selectolax`, `PRAW` for Reddit, `pyyaml`. Run manually, not part of the Next.js app.
+- **AI:** Anthropic API (`@anthropic-ai/sdk ^0.98.0`).
+  - **`claude-haiku-4-5-20251001`** for: simulator turns (low latency), corpus extraction during scraping
+  - **`claude-sonnet-4-6`** for: critique, Q&A synthesis, principles synthesis
+  - These exact model ID strings are in `lib/anthropic/client.ts` as `MODELS.fast` and `MODELS.careful`
+- **Scraper:** Python 3.14 in `/scripts` directory. Uses `httpx`, **`beautifulsoup4`** (NOT selectolax — no Python 3.14 wheel), `pyyaml`, `anthropic`, `python-dotenv`. Reddit uses public JSON API (NOT PRAW). Run manually.
 - **Hosting:** Vercel (deploy from GitHub on push to main)
 - **Source control:** GitHub
 
@@ -56,48 +57,48 @@ pgvector setup: embed `principle` field of principles.yaml, `claim` field of pra
 
 Read the full phase descriptions in `visa-coach-plan.md` §1. Summary:
 
-| Phase | Deliverable | Notes |
+| Phase | Deliverable | Status |
 |---|---|---|
-| 0.5 | Adversarial quality check with 5 test profiles | Run after Phase 3 and again after Phase 4. Hard stop: do not let Garvita see the app until this passes. |
-| 1 | Three scraping pipelines + principles synthesis with validation gate | 4-6 days. Hardest phase. |
-| 2 | 15-field profile intake form + prior-refusal narrative section (conditional) | Half a day for base form, +half day for refusal section. |
-| 3 | Q&A coach with layered-citation responses | 2-3 days. |
-| 4 | Interview simulator + post-session critique | 4-5 days. |
-| 4.1 | Prior-refusal drill mode (only built if applicant has prior refusal) | 1 day. Critical for second-time applicants. |
-| 5 | Session history + improvement tracking | Cuttable if timeline slips. |
-| 6 | Day-before mode (calm UI variant) | Critical. Must ship. Should surface saved "best answers" from Phase 4.1 if present. |
-
-**Build sequence with quality gates:**
-
-- Week 1: Phase 1 (Layer A + B scraping pipelines)
-- Week 2: Phase 1 finish (Reddit + synthesis) + Phase 2 form
-- Week 3: Phase 3 Q&A + **Phase 0.5 round 1** (P0 stop)
-- Week 4: Phase 4 simulator + critique + **Phase 0.5 round 2** (P0 stop)
-- Week 5: Phase 5 + Phase 6 + polish
-- Week 6: Buffer (non-negotiable)
-
-**Phase 1 contingency:** if scraping isn't done by end of Week 2, drop Layer B (skip lawyer scraping), proceed with Layer A + Layer C only. Don't let Phase 1 eat the whole timeline.
+| 1 | Three scraping pipelines + principles synthesis | **DONE** — 728 official, 148 practitioner, 161 reddit, 21 principles |
+| 2 | 15-field profile intake form + prior-refusal section | **DONE** — `/profile`, conditional refusal section, upsert API |
+| 3 | Q&A coach with layered-citation streaming responses | **DONE** — `/qa`, SSE streaming, citation badges |
+| 0.5 | Adversarial quality check infrastructure | **DONE** — `/test/[n]` routes, 5 profiles, ENABLE_TEST_MODE gate |
+| 0.5 scoring | Pranjal manually scores all 5 profiles on rubric | **PENDING — do this before Phase 4** |
+| 4 | Interview simulator + post-session critique | Not started |
+| 4.1 | Prior-refusal drill mode | Not started |
+| 5 | Session history + improvement tracking | Not started (cuttable) |
+| 6 | Day-before mode (calm UI variant) | Not started (critical, must ship) |
 
 ---
 
-## Phase 0.5 — what you (Claude Code) need to build
+## Phase 0.5 — current state
 
-This is the easiest-to-forget part of the plan. Build it during Week 3.
+Infrastructure is built. Pranjal still needs to run the manual scoring pass.
 
-- `test-profiles.yaml` in repo root with 5 profiles (definitions in plan §0.5, Phase 0.5 section)
-- `?test=<1-5>` URL parameter that loads the corresponding test profile instead of Garvita's
-- Test mode sessions stored in `test_sessions` table, not `sessions`
-- Visible badge in test mode: "TEST MODE: Profile #N — <description>"
-- Test mode is on a separate route prefix (`/test/*`) so it can't be accidentally hit
+**What's built:**
+- `test-profiles.yaml` — 5 synthetic profiles (see below)
+- `lib/test-profiles.ts` — YAML loader, `getTestProfile(n)` helper
+- `app/test/[n]/page.tsx` — gated by `ENABLE_TEST_MODE=true` env var; 404 for invalid n
+- `app/components/test-badge.tsx` — oxblood banner "TEST MODE: Profile #N — description"
+- Routes: `/test/1` through `/test/5`
 
-The rubric Pranjal scores against (5 dimensions, 1-5 each):
-- Hallucination check
+**Implementation note:** Uses `/test/[n]` route prefix (not `?test=N` query param). The five profiles are:
+1. Software engineer visiting H1-B partner (Garvita stand-in — update with her real data once she fills profile)
+2. High-risk: 22yo unemployed, 1 prior 214(b) refusal
+3. Low-risk: 45yo married IRS officer, 5 prior US trips
+4. Edge case: cardiologist at medical conference (B1 dynamics)
+5. Suspicious: 26yo freelancer, vague purpose, wants to extend
+
+**To run Phase 0.5 scoring:** `npm run dev`, visit `/test/1` through `/test/5`. Ask 2-3 Q&A questions per profile. Score each on the rubric below.
+
+**Rubric (5 dimensions, 1-5 each):**
+- Hallucination check (P0 — zero tolerance for <3)
 - Calibration
 - Profile awareness
 - Authority hierarchy
-- Honesty about uncertainty
+- Honesty about uncertainty (P0 — zero tolerance for <3)
 
-Hard stop: average <3.5 on any dimension, or any P0 failure on hallucination/uncertainty, means do not ship to Garvita.
+**Hard stop:** average <3.5 on any dimension, or any P0 failure, means do not ship to Garvita.
 
 ---
 
@@ -137,6 +138,31 @@ Three rules govern all UI. Full version in plan §3.
 Do NOT use bright colors. Do NOT use emojis except the three citation icons (⚖, 📋, 💬). Do NOT add cute animations.
 
 ---
+
+## Current codebase state (updated 2026-05-22)
+
+**Key files:**
+- `lib/anthropic/client.ts` — singleton Anthropic client, `MODELS.fast`/`MODELS.careful`
+- `lib/corpus/loader.ts` — loads all four YAML files once at startup; exports `official`, `practitioner`, `reddit`, `principles`
+- `lib/retrieval.ts` — keyword overlap retrieval; `retrieve(question)` + `formatSourcesForPrompt()`
+- `lib/test-profiles.ts` — loads `test-profiles.yaml`; `getTestProfile(n: number)`
+- `lib/supabase/server.ts` — `createClient()` (anon) and `createServiceClient()` (service role)
+- `lib/supabase/client.ts` — browser client
+- `types/profile.ts` — **Profile type used by QAChat and API routes** (has `created_at`, `updated_at`)
+- `lib/types.ts` — Profile type used by the profile form (`ProfileForm`) — **different schema from `types/profile.ts`**
+- `app/api/qa/route.ts` — SSE streaming Q&A endpoint
+- `app/api/profile/route.ts` — GET/POST profile upsert
+- `app/qa/qa-chat.tsx` — Q&A client component (streaming, citation badges)
+- `app/test/[n]/page.tsx` — test mode page
+- `app/components/nav.tsx` — nav bar (active state handles `/test/*`)
+- `app/components/test-badge.tsx` — oxblood TEST MODE banner
+- `app/profile/profile-form.tsx` — 15-field form with conditional refusal section
+- `corpus/*.yaml` — 728 official, 148 practitioner (133 passed), 161 reddit (24 full_transcript), 21 principles
+- `test-profiles.yaml` — 5 test profiles for Phase 0.5
+- `supabase/migrations/001_profile.sql` — profile, sessions, session_turns, test_sessions tables
+- `scripts/` — Python scrapers (scrape_official.py, scrape_practitioner.py, scrape_reddit.py, synthesize_principles.py)
+
+**⚠ Known schema split:** `types/profile.ts` (used by Q&A) and `lib/types.ts` (used by profile form) are different Profile interfaces. They have diverged. Before Phase 4, consider unifying them — but don't do it mid-session without planning.
 
 ## Engineering principles
 
