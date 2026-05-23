@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, PT_Serif } from 'next/font/google'
 import './globals.css'
+import { Nav } from './components/nav'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${ptSerif.variable} h-full`}>
       <body className="min-h-full font-sans antialiased" style={{ backgroundColor: '#FAF7F2', color: '#2A2A2A' }}>
+        <Nav />
         {children}
       </body>
     </html>

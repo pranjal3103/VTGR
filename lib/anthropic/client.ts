@@ -7,6 +7,6 @@ export const anthropic = new Anthropic({
 })
 
 export const MODELS = {
-  fast: "claude-haiku-4-5",      // simulator turns, low-latency
-  careful: "claude-sonnet-4-5",  // critique, Q&A synthesis, principles
+  fast: "claude-haiku-4-5-20251001",  // simulator turns, low-latency
+  careful: "claude-sonnet-4-6",       // critique, Q&A synthesis, principles
 } as const
