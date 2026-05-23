@@ -1,174 +1,251 @@
 # Test profiles for Phase 0.5 adversarial quality check.
-# Loaded via ?test=<1-5> URL parameter (separate /test/* route).
-# Sessions stored in test_sessions table, NOT sessions.
-# See visa-coach-plan.md §0.5 for full rubric.
+# Schema matches types/profile.ts Profile interface.
+# Profile #1 is a stand-in for Garvita's actual profile.
+# UPDATE #1 once Garvita fills in her real profile form.
 
-- id: 1
-  description: "Garvita's Actual Profile"
-  why: "The real test — does it coach well for her case?"
+- number: 1
+  description: "Software engineer visiting H1-B partner (Garvita stand-in)"
   profile:
-    full_name: "Test User 1"
-    age: 28
-    profession: "Doctor"
-    profession_detail: "Resident physician, internal medicine"
-    city: "Mumbai"
+    id: "test-1"
+    full_name: "Garvita [Test Stand-in]"
+    age: 27
+    profession: "Software Engineer"
+    profession_detail: "Backend engineer at a mid-size tech company, 3 years experience, permanent role"
+    city: "Bangalore"
     marital_status: "single"
     prior_us_visa_history: []
-    prior_international_travel: ["UK", "UAE"]
-    trip_purpose: "Visit partner"
-    partner_us_status: "US citizen"
-    planned_duration_days: 21
-    planned_cities: ["Boston", "New York"]
+    prior_international_travel:
+      - Singapore
+      - Thailand
+      - UK
+    trip_purpose: "visit_partner"
+    partner_us_status: "H1-B, working at a US tech company"
+    planned_duration_days: 45
+    planned_cities:
+      - San Francisco
+      - New York
     who_pays: "self"
     ties_to_india:
       property: false
-      dependents: false
+      dependents: true
       job_continuity: true
-      return_obligations: "Residency program requires return by specific date"
-    consulate: "mumbai"
-    interview_date: null
+      return_obligations: "Full-time permanent job, 3-week leave approved, must return for critical product launch. Parents depend on her for some support."
+    consulate: "Chennai"
+    interview_date: "2026-06-15"
     english_pref: "english"
     tough_mode: false
     has_prior_refusal: false
+    refusal_date: null
+    refusal_consulate: null
+    refusal_ground: null
+    refusal_reason_stated: null
+    refusal_attempt_number: null
+    refusal_narrative: null
+    what_has_changed_since: null
+    applicant_self_diagnosis: null
+    created_at: "2026-01-01T00:00:00Z"
+    updated_at: "2026-01-01T00:00:00Z"
 
-- id: 2
-  description: "High-Risk Applicant"
-  why: "Does the coach correctly flag risks? Does it avoid false reassurance?"
+- number: 2
+  description: "High-risk: 22yo unemployed recent grad, 1 prior 214(b) refusal"
   profile:
-    full_name: "Test User 2"
+    id: "test-2"
+    full_name: "Priya Sharma [Test Profile 2]"
     age: 22
-    profession: "Student"
-    profession_detail: "Recent graduate, currently unemployed"
-    city: "Delhi"
+    profession: "Unemployed"
+    profession_detail: "Recent B.Com graduate, finished college 4 months ago, no job yet, actively job-hunting"
+    city: "Patna"
     marital_status: "single"
     prior_us_visa_history:
       - type: "refused"
-        date: "2024-06"
-        consulate: "delhi"
-        visa_type: "B2"
+        date: "2025-03-10"
+        consulate: "New Delhi"
+        visa_type: "B1/B2"
     prior_international_travel: []
-    trip_purpose: "Tourism"
-    partner_us_status: "none"
+    trip_purpose: "tourism"
+    partner_us_status: ""
     planned_duration_days: 60
-    planned_cities: ["New York", "Los Angeles"]
-    who_pays: "parents"
+    planned_cities:
+      - New York
+      - Los Angeles
+      - Las Vegas
+    who_pays: "family_in_india"
     ties_to_india:
       property: false
       dependents: false
       job_continuity: false
-      return_obligations: "None stated"
-    consulate: "delhi"
-    interview_date: null
+      return_obligations: "No job, no formal obligations. Intends to look for opportunities while in US."
+    consulate: "New Delhi"
+    interview_date: "2026-06-20"
     english_pref: "english"
     tough_mode: true
     has_prior_refusal: true
-    refusal_date: "2024-06-01"
-    refusal_consulate: "delhi"
+    refusal_date: "2025-03-10"
+    refusal_consulate: "New Delhi"
     refusal_ground: "214b_ties"
-    refusal_reason_stated: "I am unable to issue a visa to you under section 214(b)"
+    refusal_reason_stated: "Officer said she lacked strong ties to India"
     refusal_attempt_number: 1
-    refusal_narrative: "The officer asked about my ties to India and I said I had none currently since I just graduated."
-    what_has_changed_since: "I have applied to jobs and have an interview scheduled next month."
-    applicant_self_diagnosis: "I think the officer was concerned I would stay in the US permanently."
+    refusal_narrative: "I applied in March 2025 right after graduation. The officer asked about my job and I said I was still looking. She refused me citing 214(b). I think it was because I had no job."
+    what_has_changed_since: "I have applied to several jobs and have two interviews scheduled. My parents are supporting the trip financially."
+    applicant_self_diagnosis: "I think the officer was concerned about my employment. I don't think I explained well that my family has means and I was always going to return."
+    created_at: "2026-01-01T00:00:00Z"
+    updated_at: "2026-01-01T00:00:00Z"
 
-- id: 3
-  description: "Low-Risk Applicant"
-  why: "Does the coach avoid over-warning? Does it stay calibrated?"
+- number: 3
+  description: "Low-risk: 45yo married IRS officer, 5 prior US trips, strong ties"
   profile:
-    full_name: "Test User 3"
+    id: "test-3"
+    full_name: "Rajesh Kumar [Test Profile 3]"
     age: 45
-    profession: "Government employee"
-    profession_detail: "Senior officer, Indian Administrative Service"
-    city: "Chennai"
+    profession: "Government Officer"
+    profession_detail: "Deputy Commissioner of Income Tax, Indian Revenue Service (IRS), 18 years of service, central government gazetted officer"
+    city: "Delhi"
     marital_status: "married"
     prior_us_visa_history:
       - type: "approved"
-        date: "2018-03"
-        visa_type: "B2"
-      - type: "approved"
-        date: "2020-07"
-        visa_type: "B2"
-      - type: "approved"
-        date: "2022-09"
+        date: "2024-08-01"
+        consulate: "New Delhi"
         visa_type: "B1/B2"
       - type: "approved"
-        date: "2023-11"
+        date: "2022-05-01"
+        consulate: "New Delhi"
         visa_type: "B1/B2"
       - type: "approved"
-        date: "2024-06"
-        visa_type: "B2"
-    prior_international_travel: ["UK", "Germany", "Singapore", "UAE", "Japan"]
-    trip_purpose: "Family vacation"
-    partner_us_status: "none"
-    planned_duration_days: 14
-    planned_cities: ["Washington DC", "Orlando"]
+        date: "2020-01-15"
+        consulate: "New Delhi"
+        visa_type: "B1/B2"
+      - type: "approved"
+        date: "2018-07-01"
+        consulate: "Mumbai"
+        visa_type: "B1/B2"
+      - type: "approved"
+        date: "2016-03-01"
+        consulate: "New Delhi"
+        visa_type: "B1/B2"
+    prior_international_travel:
+      - USA
+      - UK
+      - Singapore
+      - UAE
+      - Canada
+      - France
+      - Germany
+    trip_purpose: "tourism"
+    partner_us_status: ""
+    planned_duration_days: 21
+    planned_cities:
+      - Washington DC
+      - Boston
+      - Chicago
     who_pays: "self"
     ties_to_india:
       property: true
       dependents: true
       job_continuity: true
-      return_obligations: "Active government posting, mandatory return"
-    consulate: "chennai"
-    interview_date: null
+      return_obligations: "Central government service — cannot abandon post. Wife and two school-age children (12 and 8) in Delhi. Owns flat in Delhi. Wife is a school principal."
+    consulate: "New Delhi"
+    interview_date: "2026-06-18"
     english_pref: "english"
     tough_mode: false
     has_prior_refusal: false
+    refusal_date: null
+    refusal_consulate: null
+    refusal_ground: null
+    refusal_reason_stated: null
+    refusal_attempt_number: null
+    refusal_narrative: null
+    what_has_changed_since: null
+    applicant_self_diagnosis: null
+    created_at: "2026-01-01T00:00:00Z"
+    updated_at: "2026-01-01T00:00:00Z"
 
-- id: 4
-  description: "B1 Business Edge Case"
-  why: "Does the coach handle B1 business-specific dynamics, not just B2 tourism?"
+- number: 4
+  description: "Edge case: cardiologist at medical conference (B1 dynamics, employer letter)"
   profile:
-    full_name: "Test User 4"
+    id: "test-4"
+    full_name: "Dr. Ananya Iyer [Test Profile 4]"
     age: 38
     profession: "Doctor"
-    profession_detail: "Cardiologist attending an ACC medical conference in Chicago"
-    city: "Hyderabad"
+    profession_detail: "Senior Cardiologist, Apollo Hospitals Chennai, 12 years post-residency, presenting research paper at ACC 2026 annual conference in Chicago"
+    city: "Chennai"
     marital_status: "married"
     prior_us_visa_history:
       - type: "approved"
-        date: "2021-08"
+        date: "2023-04-10"
+        consulate: "Chennai"
         visa_type: "B1/B2"
-    prior_international_travel: ["UK", "Germany", "Australia"]
-    trip_purpose: "Medical conference (B1 business)"
-    partner_us_status: "none"
-    planned_duration_days: 7
-    planned_cities: ["Chicago"]
+    prior_international_travel:
+      - USA
+      - UK
+      - Germany
+      - Singapore
+      - France
+    trip_purpose: "conference"
+    partner_us_status: ""
+    planned_duration_days: 10
+    planned_cities:
+      - Chicago
     who_pays: "employer"
     ties_to_india:
       property: true
       dependents: true
       job_continuity: true
-      return_obligations: "Hospital requires return, patients waiting"
-    consulate: "hyderabad"
-    interview_date: null
+      return_obligations: "Senior position at Apollo Hospitals; patients under care; employer letter explicitly states return date. Husband and 7-year-old daughter in Chennai."
+    consulate: "Chennai"
+    interview_date: "2026-06-25"
     english_pref: "english"
     tough_mode: false
     has_prior_refusal: false
+    refusal_date: null
+    refusal_consulate: null
+    refusal_ground: null
+    refusal_reason_stated: null
+    refusal_attempt_number: null
+    refusal_narrative: null
+    what_has_changed_since: null
+    applicant_self_diagnosis: null
+    created_at: "2026-01-01T00:00:00Z"
+    updated_at: "2026-01-01T00:00:00Z"
 
-- id: 5
-  description: "Suspicious Case"
-  why: "Does the coach detect actual red flags rather than just rubber-stamping?"
+- number: 5
+  description: "Suspicious: 26yo freelancer, no fixed ties, vague purpose, wants to extend"
   profile:
-    full_name: "Test User 5"
+    id: "test-5"
+    full_name: "Arjun Mehta [Test Profile 5]"
     age: 26
     profession: "Freelancer"
-    profession_detail: "Freelance graphic designer, variable income"
-    city: "Bangalore"
+    profession_detail: "Freelance graphic designer, works remotely for international clients, no fixed employer, income irregular"
+    city: "Ahmedabad"
     marital_status: "single"
     prior_us_visa_history: []
     prior_international_travel: []
-    trip_purpose: "Tourism (vague — 'to explore')"
-    partner_us_status: "dating someone in US (not official)"
+    trip_purpose: "tourism"
+    partner_us_status: ""
     planned_duration_days: 90
-    planned_cities: []
+    planned_cities:
+      - New York
+      - San Francisco
+      - Austin
+      - Miami
+      - Seattle
     who_pays: "self"
     ties_to_india:
       property: false
       dependents: false
       job_continuity: false
-      return_obligations: "Work is remote, can work from anywhere"
-    consulate: "bangalore"
-    interview_date: null
+      return_obligations: "Works remotely — can work from anywhere. Renting flat month-to-month. No family dependents. Will see how things go regarding return timeline."
+    consulate: "Mumbai"
+    interview_date: "2026-06-22"
     english_pref: "english"
-    tough_mode: false
+    tough_mode: true
     has_prior_refusal: false
+    refusal_date: null
+    refusal_consulate: null
+    refusal_ground: null
+    refusal_reason_stated: null
+    refusal_attempt_number: null
+    refusal_narrative: null
+    what_has_changed_since: null
+    applicant_self_diagnosis: null
+    created_at: "2026-01-01T00:00:00Z"
+    updated_at: "2026-01-01T00:00:00Z"

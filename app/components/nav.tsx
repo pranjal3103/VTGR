@@ -12,6 +12,9 @@ const LINKS = [
 export function Nav() {
   const pathname = usePathname()
 
+  const isActive = (href: string) =>
+    pathname === href || (href === "/qa" && pathname.startsWith("/test"))
+
   return (
     <nav
       className="border-b px-6 py-3 flex items-center gap-6"
@@ -38,9 +41,9 @@ export function Nav() {
             href={link.href}
             className="text-sm transition-colors"
             style={{
-              color: pathname === link.href ? "#2A2A2A" : "#8B8580",
-              fontWeight: pathname === link.href ? 500 : 400,
-              borderBottom: pathname === link.href ? "1px solid #2A2A2A" : "none",
+              color: isActive(link.href) ? "#2A2A2A" : "#8B8580",
+              fontWeight: isActive(link.href) ? 500 : 400,
+              borderBottom: isActive(link.href) ? "1px solid #2A2A2A" : "none",
               paddingBottom: "2px",
             }}
           >
