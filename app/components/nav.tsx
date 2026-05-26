@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 const LINKS = [
   { href: "/profile", label: "Profile" },
   { href: "/qa", label: "Ask a question" },
-  { href: "/practice", label: "Practice interview", disabled: true },
+  { href: "/practice", label: "Practice interview" },
 ]
 
 export function Nav() {
@@ -26,31 +26,21 @@ export function Nav() {
       >
         Visa Sensei
       </span>
-      {LINKS.map(link =>
-        link.disabled ? (
-          <span
-            key={link.href}
-            className="text-sm"
-            style={{ color: "#C0BAB4" }}
-          >
-            {link.label}
-          </span>
-        ) : (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="text-sm transition-colors"
-            style={{
-              color: isActive(link.href) ? "#2A2A2A" : "#8B8580",
-              fontWeight: isActive(link.href) ? 500 : 400,
-              borderBottom: isActive(link.href) ? "1px solid #2A2A2A" : "none",
-              paddingBottom: "2px",
-            }}
-          >
-            {link.label}
-          </Link>
-        )
-      )}
+      {LINKS.map(link => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className="text-sm transition-colors"
+          style={{
+            color: isActive(link.href) ? "#2A2A2A" : "#8B8580",
+            fontWeight: isActive(link.href) ? 500 : 400,
+            borderBottom: isActive(link.href) ? "1px solid #2A2A2A" : "none",
+            paddingBottom: "2px",
+          }}
+        >
+          {link.label}
+        </Link>
+      ))}
     </nav>
   )
 }
