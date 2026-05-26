@@ -63,9 +63,9 @@ Read the full phase descriptions in `visa-coach-plan.md` §1. Summary:
 | 2 | 15-field profile intake form + prior-refusal section | **DONE** — `/profile`, conditional refusal section, upsert API |
 | 3 | Q&A coach with layered-citation streaming responses | **DONE** — `/qa`, SSE streaming, citation badges |
 | 0.5 | Adversarial quality check infrastructure | **DONE** — `/test/[n]` routes, 5 profiles, ENABLE_TEST_MODE gate |
-| 0.5 scoring | Pranjal manually scores all 5 profiles on rubric | **PENDING — do this before Phase 4** |
-| 4 | Interview simulator + post-session critique | Not started |
-| 4.1 | Prior-refusal drill mode | Not started |
+| 0.5 scoring | Pranjal manually scores all 5 profiles on rubric | **PENDING** — Q&A coach (Round 1) + simulator (Round 2) |
+| 4 | Interview simulator + post-session critique | **DONE** — `/practice`, Haiku turns, Sonnet critique, sessions table |
+| 4.1 | Prior-refusal drill mode | **DONE** — included in Phase 4; "Refusal Drill" button when `has_prior_refusal` |
 | 5 | Session history + improvement tracking | Not started (cuttable) |
 | 6 | Day-before mode (calm UI variant) | Not started (critical, must ship) |
 
@@ -139,7 +139,7 @@ Do NOT use bright colors. Do NOT use emojis except the three citation icons (⚖
 
 ---
 
-## Current codebase state (updated 2026-05-22)
+## Current codebase state (updated 2026-05-26)
 
 **Key files:**
 - `lib/anthropic/client.ts` — singleton Anthropic client, `MODELS.fast`/`MODELS.careful`
@@ -148,13 +148,20 @@ Do NOT use bright colors. Do NOT use emojis except the three citation icons (⚖
 - `lib/test-profiles.ts` — loads `test-profiles.yaml`; `getTestProfile(n: number)`
 - `lib/supabase/server.ts` — `createClient()` (anon) and `createServiceClient()` (service role)
 - `lib/supabase/client.ts` — browser client
-- `types/profile.ts` — **Profile type used by QAChat and API routes** (has `created_at`, `updated_at`)
+- `types/profile.ts` — **Profile type used by all API routes and practice/QA pages** (has `created_at`, `updated_at`, `TiesToIndia` with `property`/`dependents`/`job_continuity` booleans)
+- `types/session.ts` — `Turn`, `SimOutcome`, `SimMode`, `Critique`, `CritiqueScore`, `CritiqueIssue`
 - `lib/types.ts` — Profile type used by the profile form (`ProfileForm`) — **different schema from `types/profile.ts`**
-- `app/api/qa/route.ts` — SSE streaming Q&A endpoint
+- `app/api/qa/route.ts` — SSE streaming Q&A endpoint (Sonnet)
+- `app/api/simulator/route.ts` — SSE streaming officer turns (Haiku); detects outcome keywords
+- `app/api/critique/route.ts` — SSE streaming critique JSON (Sonnet); persists to sessions table
+- `app/api/sessions/route.ts` — POST (create session), PATCH (update turns + outcome)
 - `app/api/profile/route.ts` — GET/POST profile upsert
+- `app/practice/page.tsx` — server component; redirects to /profile if no profile
+- `app/practice/simulator.tsx` — `PracticeShell` client component; full state machine idle→done
+- `app/practice/critique.tsx` — `CritiqueView` display component
 - `app/qa/qa-chat.tsx` — Q&A client component (streaming, citation badges)
-- `app/test/[n]/page.tsx` — test mode page
-- `app/components/nav.tsx` — nav bar (active state handles `/test/*`)
+- `app/test/[n]/page.tsx` — test mode page (ENABLE_TEST_MODE gated)
+- `app/components/nav.tsx` — nav bar; all three links active; `/test/*` maps to "Ask a question"
 - `app/components/test-badge.tsx` — oxblood TEST MODE banner
 - `app/profile/profile-form.tsx` — 15-field form with conditional refusal section
 - `corpus/*.yaml` — 728 official, 148 practitioner (133 passed), 161 reddit (24 full_transcript), 21 principles
@@ -162,7 +169,13 @@ Do NOT use bright colors. Do NOT use emojis except the three citation icons (⚖
 - `supabase/migrations/001_profile.sql` — profile, sessions, session_turns, test_sessions tables
 - `scripts/` — Python scrapers (scrape_official.py, scrape_practitioner.py, scrape_reddit.py, synthesize_principles.py)
 
-**⚠ Known schema split:** `types/profile.ts` (used by Q&A) and `lib/types.ts` (used by profile form) are different Profile interfaces. They have diverged. Before Phase 4, consider unifying them — but don't do it mid-session without planning.
+**⚠ Known schema split:** `types/profile.ts` (API routes) and `lib/types.ts` (profile form) are different Profile interfaces and remain diverged. If this causes issues, unify in a dedicated session before Phase 6.
+
+**Simulator session flow:**
+1. `POST /api/sessions` → create row, get `id`
+2. `POST /api/simulator` (SSE) → stream Haiku officer turn; sends `outcome` event when detected
+3. `PATCH /api/sessions` → persist turns + outcome on session end
+4. `POST /api/critique` (SSE) → stream Sonnet critique JSON; also persists to `sessions.critique` in DB
 
 ## Engineering principles
 
