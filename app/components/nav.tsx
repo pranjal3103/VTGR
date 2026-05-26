@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/profile", label: "Profile" },
   { href: "/qa", label: "Ask a question" },
   { href: "/practice", label: "Practice interview" },
+  { href: "/day-before", label: "Day before" },
 ]
 
 export function Nav() {
