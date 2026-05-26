@@ -67,7 +67,7 @@ Read the full phase descriptions in `visa-coach-plan.md` §1. Summary:
 | 4 | Interview simulator + post-session critique | **DONE** — `/practice`, Haiku turns, Sonnet critique, sessions table |
 | 4.1 | Prior-refusal drill mode | **DONE** — included in Phase 4; "Refusal Drill" button when `has_prior_refusal` |
 | 5 | Session history + improvement tracking | Not started (cuttable) |
-| 6 | Day-before mode (calm UI variant) | Not started (critical, must ship) |
+| 6 | Day-before mode (calm UI variant) | **DONE** — `/day-before`, softer cream palette, drill answers + checklist |
 
 ---
 
