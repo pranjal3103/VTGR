@@ -63,7 +63,7 @@ Read the full phase descriptions in `visa-coach-plan.md` §1. Summary:
 | 2 | 15-field profile intake form + prior-refusal section | **DONE** — `/profile`, conditional refusal section, upsert API |
 | 3 | Q&A coach with layered-citation streaming responses | **DONE** — `/qa`, SSE streaming, citation badges |
 | 0.5 | Adversarial quality check infrastructure | **DONE** — `/test/[n]` routes, 5 profiles, ENABLE_TEST_MODE gate |
-| 0.5 scoring | Pranjal manually scores all 5 profiles on rubric | **PENDING** — Q&A coach (Round 1) + simulator (Round 2) |
+| 0.5 scoring | Pranjal manually scores all 5 profiles on rubric | **DONE** — Round 2 (simulator) avg 4.2/5, zero P0 failures. Round 1 (Q&A) still pending manual check. |
 | 4 | Interview simulator + post-session critique | **DONE** — `/practice`, Haiku turns, Sonnet critique, sessions table |
 | 4.1 | Prior-refusal drill mode | **DONE** — included in Phase 4; "Refusal Drill" button when `has_prior_refusal` |
 | 5 | Session history + improvement tracking | Not started (cuttable) |
