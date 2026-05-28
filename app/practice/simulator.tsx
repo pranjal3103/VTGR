@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react"
 import type { Profile } from "@/types/profile"
 import type { Turn, SimOutcome, SimMode, Critique } from "@/types/session"
 import { CritiqueView } from "./critique"
+import { SessionHistory } from "./history"
+import type { SessionRecord } from "./history"
 
 type SimPhase = "idle" | "starting" | "interviewing" | "ended" | "critiquing" | "done"
 
@@ -125,7 +127,7 @@ async function readSSE(
   }
 }
 
-export function PracticeShell({ profile }: { profile: Profile }) {
+export function PracticeShell({ profile, sessions = [] }: { profile: Profile; sessions?: SessionRecord[] }) {
   const [phase, setPhase] = useState<SimPhase>("idle")
   const [mode, setMode] = useState<SimMode>("standard")
   const [turns, setTurns] = useState<Turn[]>([])
@@ -301,11 +303,8 @@ handlingEnd.current = false
   // ── Idle ────────────────────────────────────────────────────────────
   if (phase === "idle") {
     return (
-      <div
-        className="flex-1 flex items-center justify-center"
-        style={{ backgroundColor: "#FAF7F2" }}
-      >
-        <div className="text-center max-w-xs px-6">
+      <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#FAF7F2" }}>
+        <div className="text-center max-w-xs mx-auto px-6 pt-16 pb-12">
           <h1
             className="text-xl font-semibold tracking-tight mb-2"
             style={{ color: "#2A2A2A" }}
@@ -336,10 +335,11 @@ handlingEnd.current = false
           </div>
           {profile.has_prior_refusal && (
             <p className="mt-4 text-xs" style={{ color: "#B0AAA4" }}>
-              Refusal drill: 2–4 targeted questions on your prior 214(b).
+              Refusal drill: targeted questions on your prior 214(b).
             </p>
           )}
         </div>
+        <SessionHistory sessions={sessions} />
       </div>
     )
   }
