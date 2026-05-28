@@ -13,6 +13,8 @@ const REFUSAL_OPENINGS = [
 function buildPrompt(profile: Profile, turns: Turn[], mode: SimMode, redditContext: string): string {
   const isFirstTurn = turns.length === 0
   const tough = profile.tough_mode || profile.has_prior_refusal
+  const today = new Date().toISOString().split("T")[0]
+  const officerTurnCount = turns.filter(t => t.role === "officer").length
 
   const t = profile.ties_to_india
   const tiesToIndia = t
@@ -55,7 +57,13 @@ Open with or quickly pivot to the prior refusal. Be more skeptical. Probe what i
     ? "Be skeptical. Push on vague answers. Demand specifics. Follow up on inconsistencies."
     : "Be neutral. Neither warm nor hostile."
 
+  const mustConclude = officerTurnCount >= (mode === "refusal_drill" ? 3 : 7)
+  const concludeRule = mustConclude
+    ? `- You have asked ${officerTurnCount} questions. You MUST end this interview NOW with exactly one of the three closing lines below. No more questions.`
+    : `- After ${maxTurns} exchanges, end with EXACTLY one of the three closing lines below.`
+
   return `You are a US consular officer at the ${profile.consulate || "New Delhi"} consulate conducting a B1/B2 visa interview.
+Today's date: ${today}
 
 ${profileBlock}${refusalBlock}${transcript}${redditBlock}${refusalDrillOpening}
 
@@ -64,7 +72,8 @@ Rules:
 - Terse — real officers are not conversational.
 - Adapt based on her previous answers.
 - ${toneRule}
-- After ${maxTurns} exchanges, end with EXACTLY one of:
+- Use today's date (${today}) when reasoning about timelines, gaps, and document dates.
+- ${concludeRule}
   "Your visa is approved."
   "I cannot approve your visa today under section 214(b)."
   "I need to request additional documents under 221(g)."
