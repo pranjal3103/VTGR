@@ -22,11 +22,11 @@ function buildPrompt(profile: Profile, turns: Turn[], mode: SimMode, redditConte
   const profileBlock = `Applicant:
 - ${profile.full_name || "Applicant"}, age ${profile.age}, ${profile.profession}${profile.profession_detail ? ` (${profile.profession_detail})` : ""}
 - City: ${profile.city}, Marital status: ${profile.marital_status}
-- Trip: ${profile.trip_purpose}, ${profile.planned_duration_days} days, cities: ${profile.planned_cities?.join(", ") || "not stated"}
+- Trip: ${profile.trip_purpose}, ${profile.planned_duration_days} days, cities: ${Array.isArray(profile.planned_cities) ? profile.planned_cities.join(", ") : "not stated"}
 - Who pays: ${profile.who_pays}
 - Ties to India: ${tiesToIndia}
 - Prior US history: ${JSON.stringify(profile.prior_us_visa_history)}
-- Prior travel: ${profile.prior_international_travel?.join(", ") || "none"}`
+- Prior travel: ${Array.isArray(profile.prior_international_travel) ? profile.prior_international_travel.join(", ") : "none"}`
 
   const refusalBlock = profile.has_prior_refusal
     ? `\nCRITICAL — PRIOR REFUSAL ON FILE:
@@ -73,9 +73,9 @@ Rules:
 
 function detectOutcome(text: string): SimOutcome | null {
   const lower = text.toLowerCase()
-  if (lower.includes("visa is approved")) return "approved"
-  if (lower.includes("214(b)") || lower.includes("cannot approve")) return "refused_214b"
-  if (lower.includes("221(g)") || lower.includes("additional documents")) return "documents_needed"
+  if (lower.includes("your visa is approved")) return "approved"
+  if (lower.includes("cannot approve your visa")) return "refused_214b"
+  if (lower.includes("request additional documents")) return "documents_needed"
   return null
 }
 

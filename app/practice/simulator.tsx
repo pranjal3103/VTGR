@@ -7,11 +7,6 @@ import { CritiqueView } from "./critique"
 
 type SimPhase = "idle" | "starting" | "interviewing" | "ended" | "critiquing" | "done"
 
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${s.toString().padStart(2, "0")}`
-}
 
 async function readSSE(
   url: string,
@@ -55,7 +50,6 @@ export function PracticeShell({ profile }: { profile: Profile }) {
   const [officerStreaming, setOfficerStreaming] = useState(false)
   const [input, setInput] = useState("")
   const [outcome, setOutcome] = useState<SimOutcome | null>(null)
-  const [timeLeft, setTimeLeft] = useState(240)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [critique, setCritique] = useState<Critique | null>(null)
   const [critiqueLoading, setCritiqueLoading] = useState(false)
@@ -84,23 +78,7 @@ export function PracticeShell({ profile }: { profile: Profile }) {
     sessionIdRef.current = id
   }
 
-  // Timer
-  useEffect(() => {
-    if (phase !== "interviewing") return
-    const id = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
-          clearInterval(id)
-          void handleEndRef.current?.()
-          return 0
-        }
-        return t - 1
-      })
-    }, 1000)
-    return () => clearInterval(id)
-  }, [phase])
-
-  // Scroll to bottom on transcript change
+// Scroll to bottom on transcript change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [turns, currentOfficerText])
@@ -195,8 +173,7 @@ export function PracticeShell({ profile }: { profile: Profile }) {
     setTurnsSync([])
     setOutcomeSync(null)
     setCurrentOfficerText("")
-    setTimeLeft(selectedMode === "refusal_drill" ? 180 : 240)
-    handlingEnd.current = false
+handlingEnd.current = false
     setCritique(null)
 
     const res = await fetch("/api/sessions", {
@@ -232,7 +209,6 @@ export function PracticeShell({ profile }: { profile: Profile }) {
 
   const officerTurnCount = turns.filter(t => t.role === "officer").length
   const isRefusalDrill = mode === "refusal_drill"
-  const timerColor = timeLeft < 60 ? "#7A1F1F" : "#8B8580"
 
   // ── Idle ────────────────────────────────────────────────────────────
   if (phase === "idle") {
@@ -386,11 +362,9 @@ export function PracticeShell({ profile }: { profile: Profile }) {
         <span className="text-sm font-medium" style={{ color: "#2A2A2A" }}>
           {isRefusalDrill ? "Refusal Drill" : "Mock Interview"}
         </span>
-        {phase === "interviewing" && (
-          <span className="text-sm font-mono tabular-nums" style={{ color: timerColor }}>
-            ⏱ {formatTime(timeLeft)}
-          </span>
-        )}
+        <span className="text-sm" style={{ color: "#B0AAA4" }}>
+          {phase === "interviewing" ? `Q${officerTurnCount}` : ""}
+        </span>
       </div>
 
       {/* Outcome banner */}

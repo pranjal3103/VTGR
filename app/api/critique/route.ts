@@ -38,7 +38,7 @@ You MUST include "prior_refusal_addressed" (1–5) in output. Did her answers de
   return `You are a visa interview coach analyzing a completed mock interview.
 
 Applicant: ${profile.full_name || "Applicant"}, ${profile.age}yo ${profile.profession}, ${profile.city}
-Trip: ${profile.trip_purpose} to ${profile.planned_cities?.join(", ")} for ${profile.planned_duration_days} days
+Trip: ${profile.trip_purpose} to ${Array.isArray(profile.planned_cities) ? profile.planned_cities.join(", ") : "not stated"} for ${profile.planned_duration_days} days
 Consulate: ${profile.consulate}${refusalBlock}
 
 Simulated outcome: ${outcomeLabel}
@@ -60,7 +60,7 @@ Produce a structured critique as VALID JSON matching this EXACT schema:
     "trip_purpose": <1-5>,
     "financial_credibility": <1-5>,
     "consistency": <1-5>,
-    "conciseness": <1-5>
+    "conciseness": <1-5, where 5=tight one-sentence answers, 3=acceptable but wordy, 1=rambling or one-word answers that needed more>
   },
   "issues": [
     {
@@ -86,6 +86,7 @@ HARD RULES:
 3. estimated_outcome_examples: reference exactly 3 Reddit transcripts with their outcomes. Do NOT make probabilistic predictions.
 4. Reddit may appear ONLY in estimated_outcome_examples — never as basis for issues or scores.
 5. Be honest with scores. Do not inflate.
+7. For conciseness: flag answers that were too long (officers lose patience) AND answers that were too vague or one-word (officers need substance). The stronger_version should model the right length.
 6. Output ONLY valid JSON. No markdown fences. No explanation before or after.`
 }
 

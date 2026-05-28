@@ -14,7 +14,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json()
+  const raw = await req.json()
+  // Postgres rejects "" for date columns — coerce to null
+  const body = Object.fromEntries(
+    Object.entries(raw).map(([k, v]) => [k, v === "" ? null : v])
+  )
   const supabase = createServiceClient()
 
   const { data: existing } = await supabase
