@@ -7,6 +7,89 @@ import { CritiqueView } from "./critique"
 
 type SimPhase = "idle" | "starting" | "interviewing" | "ended" | "critiquing" | "done"
 
+const MAX_OFFICER_TURNS: Record<SimMode, number> = {
+  standard: 8,
+  refusal_drill: 4,
+}
+
+function buildTranscriptText(
+  profile: Profile,
+  mode: SimMode,
+  turns: Turn[],
+  outcome: SimOutcome | null,
+  critique: Critique | null,
+): string {
+  const date = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+  const outcomeLabel = outcome === "approved"
+    ? "Approved"
+    : outcome === "refused_214b"
+    ? "Refused — 214(b)"
+    : outcome === "documents_needed"
+    ? "Documents requested — 221(g)"
+    : "Session ended early"
+
+  const lines: string[] = [
+    `Visa Sensei — Mock Interview Transcript`,
+    `${mode === "refusal_drill" ? "Refusal Drill" : "Mock Interview"} · ${date}`,
+    `Applicant: ${profile.full_name ?? "—"} · ${profile.consulate ?? "—"} Consulate`,
+    ``,
+    `─────────────────────────────────────────`,
+    `TRANSCRIPT`,
+    `─────────────────────────────────────────`,
+  ]
+
+  let q = 0
+  for (let i = 0; i < turns.length; i++) {
+    const t = turns[i]
+    if (t.role === "officer") {
+      q++
+      lines.push(``, `Q${q}. Officer:`, t.content)
+    } else {
+      lines.push(``, `   You:`, t.content)
+    }
+  }
+
+  lines.push(``, `─────────────────────────────────────────`)
+  lines.push(`OUTCOME: ${outcomeLabel}`)
+  lines.push(`─────────────────────────────────────────`)
+
+  if (critique) {
+    lines.push(``, `FEEDBACK`, ``)
+    lines.push(critique.summary)
+    lines.push(``)
+    lines.push(`Scores:`)
+    const s = critique.scores
+    lines.push(`  Ties to India         ${s.ties_to_india}/5`)
+    lines.push(`  Trip purpose          ${s.trip_purpose}/5`)
+    lines.push(`  Financial credibility ${s.financial_credibility}/5`)
+    lines.push(`  Consistency           ${s.consistency}/5`)
+    lines.push(`  Conciseness           ${s.conciseness}/5`)
+    if (critique.things_to_practice?.length) {
+      lines.push(``, `Things to practice:`)
+      critique.things_to_practice.forEach((item, i) => lines.push(`  ${i + 1}. ${item}`))
+    }
+  }
+
+  return lines.join("\n")
+}
+
+function downloadTranscript(
+  profile: Profile,
+  mode: SimMode,
+  turns: Turn[],
+  outcome: SimOutcome | null,
+  critique: Critique | null,
+) {
+  const text = buildTranscriptText(profile, mode, turns, outcome, critique)
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `visa-mock-${new Date().toISOString().split("T")[0]}.txt`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 
 async function readSSE(
   url: string,
@@ -154,6 +237,11 @@ export function PracticeShell({ profile }: { profile: Profile }) {
         setTurnsSync(newTurns)
         setCurrentOfficerText("")
         setOfficerStreaming(false)
+        const officerCount = newTurns.filter(t => t.role === "officer").length
+        if (officerCount >= MAX_OFFICER_TURNS[currentMode]) {
+          void handleEndRef.current?.()
+          return
+        }
         inputRef.current?.focus()
       },
       value => {
@@ -306,7 +394,7 @@ handlingEnd.current = false
             </p>
           )}
 
-          <div className="mt-10 pt-6" style={{ borderTop: "1px solid #E8E3DC" }}>
+          <div className="mt-10 pt-6 flex items-center gap-6" style={{ borderTop: "1px solid #E8E3DC" }}>
             <button
               onClick={() => setPhase("idle")}
               className="text-sm"
@@ -314,6 +402,15 @@ handlingEnd.current = false
             >
               ← Start another session
             </button>
+            {phase === "done" && (
+              <button
+                onClick={() => downloadTranscript(profile, mode, turns, outcome, critique)}
+                className="text-sm"
+                style={{ color: "#4A4A4A" }}
+              >
+                Download transcript
+              </button>
+            )}
           </div>
         </div>
       </div>
