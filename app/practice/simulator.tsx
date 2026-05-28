@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import type { Profile } from "@/types/profile"
 import type { Turn, SimOutcome, SimMode, Critique } from "@/types/session"
+import { useRouter } from "next/navigation"
 import { CritiqueView } from "./critique"
 import { SessionHistory } from "./history"
 import type { SessionRecord } from "./history"
@@ -128,6 +129,7 @@ async function readSSE(
 }
 
 export function PracticeShell({ profile, sessions = [] }: { profile: Profile; sessions?: SessionRecord[] }) {
+  const router = useRouter()
   const [phase, setPhase] = useState<SimPhase>("idle")
   const [mode, setMode] = useState<SimMode>("standard")
   const [turns, setTurns] = useState<Turn[]>([])
@@ -394,7 +396,7 @@ handlingEnd.current = false
             </p>
           )}
 
-          <div className="mt-10 pt-6 flex items-center gap-6" style={{ borderTop: "1px solid #E8E3DC" }}>
+          <div className="mt-10 pt-6 flex flex-wrap items-center gap-x-6 gap-y-3" style={{ borderTop: "1px solid #E8E3DC" }}>
             <button
               onClick={() => setPhase("idle")}
               className="text-sm"
@@ -403,13 +405,24 @@ handlingEnd.current = false
               ← Start another session
             </button>
             {phase === "done" && (
-              <button
-                onClick={() => downloadTranscript(profile, mode, turns, outcome, critique)}
-                className="text-sm"
-                style={{ color: "#4A4A4A" }}
-              >
-                Download transcript
-              </button>
+              <>
+                <button
+                  onClick={() => downloadTranscript(profile, mode, turns, outcome, critique)}
+                  className="text-sm"
+                  style={{ color: "#4A4A4A" }}
+                >
+                  Download transcript
+                </button>
+                {sessionId && (
+                  <button
+                    onClick={() => router.push(`/qa?session=${sessionId}`)}
+                    className="text-sm font-medium"
+                    style={{ color: "#2A2A2A" }}
+                  >
+                    Discuss this session →
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -3,6 +3,16 @@
 import { useState, useRef, useEffect } from "react"
 import type { Profile } from "@/types/profile"
 import type { Principle, OfficialEntry, PractitionerEntry, RedditEntry } from "@/types/corpus"
+import type { Turn, SimOutcome, SimMode, Critique } from "@/types/session"
+
+type SessionContext = {
+  id: string
+  ended_at: string
+  mode: SimMode
+  outcome_in_sim: SimOutcome | null
+  turns: Turn[]
+  critique: Critique | null
+}
 
 type Sources = {
   principles: Principle[]
@@ -110,10 +120,11 @@ function SourcesPanel({ sources }: { sources: Sources }) {
   )
 }
 
-export function QAChat({ profile }: { profile: Profile }) {
+export function QAChat({ profile, sessionContext: initialSessionContext = null }: { profile: Profile; sessionContext?: SessionContext | null }) {
   const [messages, setMessages] = useState<QAMessage[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [sessionCtx, setSessionCtx] = useState<SessionContext | null>(initialSessionContext)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -139,7 +150,7 @@ export function QAChat({ profile }: { profile: Profile }) {
       const res = await fetch("/api/qa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, profile }),
+        body: JSON.stringify({ question, profile, sessionContext: sessionCtx }),
       })
 
       if (!res.body) throw new Error("No response body")
@@ -207,6 +218,28 @@ export function QAChat({ profile }: { profile: Profile }) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Session context banner */}
+      {sessionCtx && (
+        <div
+          className="mb-4 flex items-center justify-between px-3 py-2 rounded-md text-xs flex-shrink-0"
+          style={{ backgroundColor: "#F0EBE3", border: "1px solid #D9D4CC", color: "#4A4A4A" }}
+        >
+          <span>
+            Discussing session from{" "}
+            {new Date(sessionCtx.ended_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+            {" "}· {sessionCtx.mode === "refusal_drill" ? "Refusal Drill" : "Mock Interview"}
+          </span>
+          <button
+            onClick={() => setSessionCtx(null)}
+            className="ml-3 opacity-60 hover:opacity-100 transition-opacity"
+            aria-label="Dismiss session context"
+            style={{ color: "#4A4A4A" }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Message list */}
       <div className="flex-1 overflow-y-auto pb-6 space-y-8">
         {messages.length === 0 && (
