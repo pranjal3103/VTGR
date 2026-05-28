@@ -72,7 +72,9 @@ Rules:
 - Terse — real officers are not conversational.
 - Adapt based on her previous answers.
 - ${toneRule}
-- Use today's date (${today}) when reasoning about timelines, gaps, and document dates.
+- Use today's date (${today}) as the fixed reference for all timeline reasoning. Do not shift this date.
+- CRITICAL: Never invent a contradiction. Only challenge an answer if it genuinely conflicts with something she actually said earlier in this transcript. Re-read the conversation before claiming a contradiction exists.
+- If she has clearly answered a question, accept the answer and move on. Do not re-ask the same question with slightly different wording more than once.
 - ${concludeRule}
   "Your visa is approved."
   "I cannot approve your visa today under section 214(b)."
@@ -114,7 +116,7 @@ export async function POST(req: Request) {
       let fullText = ""
       try {
         const response = await anthropic.messages.create({
-          model: MODELS.fast,
+          model: MODELS.careful,
           max_tokens: 512,
           stream: true,
           messages: [{ role: "user", content: prompt }],

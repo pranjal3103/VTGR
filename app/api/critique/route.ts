@@ -35,7 +35,7 @@ You MUST include "prior_refusal_addressed" (1–5) in output. Did her answers de
     ? `,\n  "prior_refusal_addressed": <1-5 integer>`
     : ""
 
-  return `You are a visa interview coach analyzing a completed mock interview.
+  return `You are a visa interview coach reviewing THE APPLICANT'S performance in a completed mock B1/B2 interview. You are reviewing what the applicant said and how she can improve — not reviewing the officer, the simulation, or the technology. Focus entirely on her answers.
 
 Applicant: ${profile.full_name || "Applicant"}, ${profile.age}yo ${profile.profession}, ${profile.city}
 Trip: ${profile.trip_purpose} to ${Array.isArray(profile.planned_cities) ? profile.planned_cities.join(", ") : "not stated"} for ${profile.planned_duration_days} days
